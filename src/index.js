@@ -1,29 +1,49 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-class Square extends React.Component {
+
+function Square(props) {
+	return (
+		<button className='square' onClick={props.onClick}>
+			{props.value}
+		</button>
+	);
+}
+class Board extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			value: null,
+			squares: Array(9).fill(null),
+			xIsNext: true,
+			winner: null,
 		};
 	}
-	render() {
-		return (
-			<button className='square' onClick={() => this.setState({ value: 'X' })}>
-				{this.state.value}
-			</button>
-		);
-	}
-}
-
-class Board extends React.Component {
 	renderSquare(i) {
-		return <Square value={i} />;
+		return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
+	}
+
+	handleClick(i) {
+		const squares = this.state.squares.slice();
+		squares[i] = this.state.xIsNext ? 'X' : 'O';
+		if (!this.state.squares[i]) {
+			this.setState({ squares: squares, xIsNext: !this.state.xIsNext, winner: calculateWinner(squares) });
+		}
+		if (this.state.winner) {
+			this.setState({
+				squares: Array(9).fill(null),
+				xIsNext: true,
+				winner: null,
+			});
+		}
 	}
 
 	render() {
-		const status = 'Next player: X';
+		let status;
+		if (this.state.winner) {
+			status = 'Winner: ' + this.state.winner;
+		} else {
+			status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+		}
 
 		return (
 			<div>
@@ -62,6 +82,31 @@ class Game extends React.Component {
 			</div>
 		);
 	}
+}
+
+function calculateWinner(squares) {
+	const lines = [
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		[0, 4, 8],
+		[2, 4, 6],
+	];
+
+	let allFilledFlag = true;
+	for (let i = 0; i < lines.length; i++) {
+		const [a, b, c] = lines[i];
+		if (!squares[a] || !squares[b] || !squares[c]) {
+			allFilledFlag = false;
+		} else if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+			return squares[a];
+		}
+	}
+
+	return allFilledFlag ? 'Draw' : null;
 }
 
 // ========================================
